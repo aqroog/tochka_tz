@@ -12,7 +12,6 @@ def check_capacity(max_capacity: int, guests: list) -> bool:
     rooms = 0
 
     for i in range(day * month):
-        print("Текущий день", current)
         for guest in guests:
             
             check_in = datetime.strptime(guest['check-in'], format)
