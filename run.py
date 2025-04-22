@@ -20,8 +20,6 @@ def check_capacity(max_capacity: int, guests: list) -> bool:
             if current >= check_in and current < check_out:
                 rooms += 1
                 
-        print("Кол-во занятых комнат", rooms)
-
         if max_capacity < rooms:
             return False
 
