@@ -4,14 +4,22 @@ from datetime import datetime, timedelta
 def check_capacity(max_capacity: int, guests: list) -> bool:
 
     format = '%Y-%m-%d'
-    current = datetime.strptime(guests[0]['check-in'], format) 
+    
+    list_date = []
+    for i in guests:
+        list_date.append(i['check-in'])
+        list_date.append(i['check-out'])
 
-    day = datetime.strptime(guests[-1]['check-out'], format).day
-    month = datetime.strptime(guests[-1]['check-out'], format).month
+    list_date.sort()   
+
+    current = datetime.strptime(list_date[0], format)
+    last = datetime.strptime(list_date[-1], format)
+
+    days =  last - current
 
     rooms = 0
 
-    for i in range(day * month):
+    for i in range(days.days):
         for guest in guests:
             
             check_in = datetime.strptime(guest['check-in'], format)
@@ -19,7 +27,7 @@ def check_capacity(max_capacity: int, guests: list) -> bool:
        
             if current >= check_in and current < check_out:
                 rooms += 1
-                
+
         if max_capacity < rooms:
             return False
 
@@ -42,4 +50,3 @@ if __name__ == "__main__":
 
     result = check_capacity(max_capacity, guests)
     print(result)
-
