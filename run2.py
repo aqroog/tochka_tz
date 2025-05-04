@@ -17,69 +17,73 @@ def solve(data):
     key_position = {} # Положение ключей
     door_position = {} # Положение дверей
 
-    start_position = [] # Начальные точки
-
-    pickUp_key = {} # Подобраные ключи
-    
-    robots = 0
-    doors = 0
-    steps = 0
-
     # Перебираем всю карту и находим позиции элементов
     for x in range(rows):
         for y in range(cols):
             cell = data[x][y]
             if cell == '@':
                 robot_position.append((x, y))
-                start_position.append([x,y])
-                robots += 1
             elif cell in keys_char:
-                key_position[cell] = [(x, y)]
+                key_position[cell] = (x, y)
             elif cell in doors_char:
-                door_position[cell] = [(x, y)]
-                doors += 1
+                door_position[cell] = (x, y)
 
     direction = [(-1,0), (1,0), (0,-1), (0,1)] # Направление робота
     
-    visited_position = set(robot_position)
+    
+    state = collections.deque([(tuple(robot_position), tuple())])
+    # Сохраняем начальное положение роботов и ключи, как посещенные места и подобранные (в начале пустые)
+    visited_position = {(tuple(robot_position), tuple())}
+    
+    steps = 0
 
-    while doors > 0:
+    while state:
+        
+        for _ in range(len(state)):
+            current_robot_positions, collected_keys = state.popleft()
 
-        # Перебираем всех роботов
-        for i in range(robots):
-            # Перебираем все возможные направления
-            for dx, dy in direction:
-                # Создаем новые точки, в которые пошли роботы
-                nx, ny = start_position[i][0] + dx, start_position[i][1] + dy
-                 # Проверяем точки на выход из поля
-                if 0 <= nx < rows and 0 <= ny < cols:
-                    cell = data[nx][ny]
-                    # Если встретили стену, продолжаем
-                    if cell == "#":
-                        continue
-                    # Если встретил дверь, то проверь, собран ли ключ
-                    if cell in doors_char:
-                        key = cell.lower()
-                        if key in pickUp_key:
-                            doors -= 1
-                        else:
-                            continue
-                    # Если встретил ключ, собери и занеси значение
-                    if cell in keys_char:
-                        if cell not in pickUp_key:
-                            pickUp_key[cell] = [(nx, ny)]
-                        else:
-                            continue
-                    # Если встретил путь, то иди на него
-                    if cell == ".":
-                        start_position[i][0] = nx
-                        start_position[i][1] = ny
-                    
-                    # Записываем точку, как пройденную
-                    visited_position.add((nx, ny))
-                    steps += 1
+            # Сравниваем кол-во собранных и созданных ключей
+            if len(collected_keys) == len(key_position):
+                return steps
+            
+            # Перебираем всех роботов
+            for i in range(len(current_robot_positions)):
+                robot_x, robot_y = current_robot_positions[i]
 
-    return steps
+                # Перебираем все возможные направления
+                for dx, dy in direction:
+                    # Создаем новые точки, в которые пошли роботы
+                    nx, ny = robot_x + dx, robot_y + dy
+
+                    # Проверяем точки на выход из поля
+                    if 0 <= nx < rows and 0 <= ny < cols and data[nx][ny] != '#':
+                        cell = data[nx][ny]
+
+                        # Если встретил дверь, то проверь, собран ли ключ и есть ли он
+                        if cell in doors_char:
+                            key = cell.lower()
+                            if key not in collected_keys:
+                                continue
+
+                        # Обновление позиции робота, после всех проверок
+                        new_robot_positions = list(current_robot_positions)
+                        new_robot_positions[i] = (nx, ny)
+                        new_collected_keys = list(collected_keys)
+
+                        # Если встретил ключ, собери и занеси значение
+                        if cell in keys_char:
+                            if cell not in new_collected_keys:
+                                new_collected_keys.append(cell)
+                                new_collected_keys.sort()                            
+
+                        next_step = (tuple(new_robot_positions), tuple(new_collected_keys))
+                        
+                        # Записываем точку, как пройденную, если в ней еще не были
+                        if next_step not in visited_position:
+                            visited_position.add(next_step)
+                            state.append(next_step)
+
+        steps += 1
 
 def main():
     data = get_input()
